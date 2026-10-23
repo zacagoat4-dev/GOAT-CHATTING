@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goat Chatting</title>
+    <style>
+        :root {
+            --sidebar-bg: #f9f9f8;
+            --sidebar-border: #e5e5e3;
+            --primary-dark: #112d28;
+            --primary-hover: #1c4740;
+            --text-main: #1f1f1f;
+            --text-muted: #666666;
+            --card-bg: #ffffff;
+            --card-border: #e0e0e0;
+            --input-bg: #ffffff;
+            --input-border: #d0d0d0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #ffffff;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .sidebar-top {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .brand h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #1a1a1a;
+            font-family: Georgia, serif;
+        }
+
+        .brand span {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .new-chat-btn {
+            background-color: var(--primary-dark);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: left;
+        }
+
+        .new-chat-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .history-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .history-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 8px 10px;
+            font-size: 13px;
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .no-history {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid var(--sidebar-border);
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .quit-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        .quit-btn:hover {
+            color: var(--text-main);
+        }
+
+        /* --- MAIN CHAT AREA --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #ffffff;
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 20px 30px;
+            font-size: 15px;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            justify-content: center; /* Centered by default for welcome screen */
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 700px;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .avatar-badge {
+            width: 48px;
+            height: 48px;
+            background-color: var(--primary-dark);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-family: Georgia, serif;
+            font-weight: bold;
+        }
+
+        .welcome-screen h2 {
+            font-size: 32px;
+            font-family: Georgia, serif;
+            font-weight: normal;
+            color: #1a1a1a;
+        }
+
+        .welcome-screen p {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            max-width: 600px;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .suggestion-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            font-size: 14px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-card:hover {
+            border-color: var(--primary-dark);
+            background-color: #fafafa;
+        }
+
+        /* Messages List View (Active Chat) */
+        .messages-list {
+            width: 100%;
+            max-width: 750px;
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+            padding-bottom: 20px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 80%;
+        }
+
+        .message.user .message-bubble {
+            background-color: #f0f0f0;
+            color: var(--text-main);
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.assistant .message-bubble {
+            background-color: #f7f9f9;
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+            border: 1px solid #eaeaea;
+        }
+
+        /* Input Area */
+        .input-area-wrapper {
+            padding: 20px 30px 30px 30px;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0));
+        }
+
+        .input-container {
+            width: 100%;
+            max-width: 750px;
+            position: relative;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: flex-end;
+            padding: 12px 16px;
+        }
+
+        .input-container textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            max-height: 150px;
+            font-size: 14px;
+            color: var(--text-main);
+            background: transparent;
+            line-height: 1.4;
+            padding-top: 4px;
+        }
+
+        .send-btn {
+            background-color: var(--primary-dark);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .send-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .send-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <sidebar>
+        <div class="sidebar-top">
+            <div class="brand">
+                <h1>GOAT CHATTING</h1>
+                <span>Franc & Bienveillant</span>
+            </div>
+            
+            <button class="new-chat-btn" onclick="resetChat()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Nouvelle conversation
+            </button>
+
+            <div class="history-section">
+                <div class="history-title">Historique</div>
+                <div id="historyListContainer">
+                    <span class="no-history" id="noHistoryText">Aucune conversation pour l'instant.</span>
+                    <ul class="history-list" id="historyList" style="display:none;"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <span id="userEmail">zacagoat4@gmail.com</span>
+            <button class="quit-btn" onclick="alert('Fermeture de la session simulée.')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Quitter
+            </button>
+        </div>
+    </sidebar>
+
+    <!-- MAIN INTERFACE -->
+    <main>
+        <div class="chat-header">
+            <span id="headerTitle">Nouvelle conversation</span>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="avatar-badge">G</div>
+                <h2>Bienvenue sur GOAT CHATTING.</h2>
+                <p>Je vous aide à réfléchir, écrire et décider. Et je vous le dis franchement quand une demande n'est pas réalisable ou quand vous vous trompez — avec l'explication et une alternative, jamais pour vous froisser.</p>
+                
+                <div class="suggestions-grid">
+                    <div class="suggestion-card" onclick="sendSuggestion('Aide-moi à préparer un entretien important')">
+                        Aide-moi à préparer un entretien important
+                    </div>
+                    <div class="suggestion-card" onclick="sendSuggestion('Explique-moi ce sujet complexe simplement')">
+                        Explique-moi ce sujet complexe simplement
+                    </div>
+                    <div class="suggestion-card" onclick="sendSuggestion('Dis-moi franchement si mon idée tient debout')">
+                        Dis-moi franchement si mon idée tient debout
+                    </div>
+                    <div class="suggestion-card" onclick="sendSuggestion('Reformule ce message pour qu\'il passe mieux')">
+                        Reformule ce message pour qu\'il passe mieux
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="messages-list" id="messagesList"></div>
+        </div>
+
+        <!-- Input Box -->
+        <div class="input-area-wrapper">
+            <div class="input-container">
+                <textarea id="userInput" rows="1" placeholder="Écrivez votre message..." oninput="autoResize(this)" onkeydown="checkSubmit(event)"></textarea>
+                <button class="send-btn" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let isFirstMessage = true;
+        let currentChatTitle = "Nouvelle conversation";
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        function checkSubmit(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function sendSuggestion(text) {
+            document.getElementById('userInput').value = text;
+            sendMessage();
+        }
+
+        function switchLayoutToChat() {
+            if (isFirstMessage) {
+                document.getElementById('welcomeScreen').style.display = 'none';
+                document.getElementById('messagesList').style.display = 'flex';
+                isFirstMessage = false;
+            }
+        }
+
+        function addMessage(sender, text) {
+            const list = document.getElementById('messagesList');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text;
+            
+            messageDiv.appendChild(bubble);
+            list.appendChild(messageDiv);
+            
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getMockResponse(userText) {
+            // Moteur de réponses simulé sans IA externe (basé sur le ton franc et bienveillant)
+            const lower = userText.toLowerCase();
+            
+            if (lower.includes('entretien')) {
+                return "Franchement, la préparation d'un entretien se joue sur deux choses : ta clarté et ta structure. Ne cherche pas à réciter un texte par cœur. Entraîne-toi plutôt à résumer ton parcours en 2 minutes chrono. Veux-tu qu'on simule les questions classiques ?";
+            } else if (lower.includes('idée') || lower.includes('debout')) {
+                return "Parlons-en franchement : ton idée a du potentiel, mais elle comporte une faille majeure sur le plan technique ou pratique. Au lieu de foncer tête baissée, voici une alternative plus simple et plus efficace à tester d'abord.";
+            } else if (lower.includes('explique') || lower.includes('simple')) {
+                return "Pour faire simple : imagine que ce concept fonctionne exactement comme un engrenage. Si tu bloques une pièce, tout s'arrête. On va éviter les termes compliqués et se concentrer sur l'essentiel.";
+            } else if (lower.includes('reformule') || lower.includes('message')) {
+                return "Ton message actuel risque d'être mal interprété. Je te propose de le tourner de cette façon pour être plus direct tout en restant constructif et poli : [Version reformulée claire et percutante].";
+            } else {
+                return `J'ai bien reçu ton message : "${userText}". C'est intéressant, mais pour être totalement franc avec toi, il manque un peu de contexte. Dis-moi précisément ce que tu souhaites accomplir et on regarde ça ensemble étape par étape.`;
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            switchLayoutToChat();
+
+            // Si c'est le tout premier message, on met à jour l'historique de la sidebar
+            if (currentChatTitle === "Nouvelle conversation") {
+                currentChatTitle = text.length > 25 ? text.substring(0, 25) + '...' : text;
+                document.getElementById('headerTitle').textContent = currentChatTitle;
+                updateHistory(currentChatTitle);
+            }
+
+            // Ajouter le message de l'utilisateur
+            addMessage('user', text);
+            input.value = '';
+            input.style.height = 'auto';
+
+            // Simuler un délai de réflexion puis répondre
+            setTimeout(() => {
+                const response = getMockResponse(text);
+                addMessage('assistant', response);
+            }, 600);
+        }
+
+        function updateHistory(title) {
+            document.getElementById('noHistoryText').style.display = 'none';
+            const ul = document.getElementById('historyList');
+            ul.style.display = 'flex';
+            
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.textContent = title;
+            li.onclick = () => alert("Chargement de la conversation : " + title);
+            ul.prepend(li);
+        }
+
+        function resetChat() {
+            isFirstMessage = true;
+            currentChatTitle = "Nouvelle conversation";
+            document.getElementById('headerTitle').textContent = currentChatTitle;
+            document.getElementById('welcomeScreen').style.display = 'flex';
+            document.getElementById('messagesList').style.display = 'none';
+            document.getElementById('messagesList').innerHTML = '';
+            document.getElementById('userInput').value = '';
+        }
+    </script>
+</body>
+</html>
